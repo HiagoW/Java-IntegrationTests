@@ -2,9 +2,13 @@ package br.com.alura.leilao.dao;
 
 import br.com.alura.leilao.model.Usuario;
 import br.com.alura.leilao.util.JPAUtil;
+import org.junit.Assert;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -13,18 +17,34 @@ class UsuarioDaoTest {
     private UsuarioDao dao;
     private EntityManager em;
 
-    @Test
-    void testeBuscaDeUsuarioPeloUsername() {
-        EntityManager em = JPAUtil.getEntityManager();
+    @BeforeEach
+    public void beforeEach() {
+        this.em = JPAUtil.getEntityManager();
         this.dao = new UsuarioDao(em);
-
-        Usuario usuario = new Usuario("fulano", "fulano@email.com", "12345678");
         em.getTransaction().begin();
-        em.persist(usuario);
-        em.getTransaction().commit();
+    }
 
+    @AfterEach
+    public void afterEach() {
+        em.getTransaction().rollback();
+    }
+
+    @Test
+    void deveriaEncontrarUsuarioCadastrado() {
+        Usuario usuario = criarUsuario();
         Usuario encontrado = this.dao.buscarPorUsername(usuario.getNome());
         assertNotNull(encontrado);
     }
 
+    @Test
+    void naoDeveriaEncontrarUsuarioNaoCadastrado() {
+        criarUsuario();
+        Assert.assertThrows(NoResultException.class, () -> this.dao.buscarPorUsername("beltrano"));
+    }
+
+    private Usuario criarUsuario() {
+        Usuario usuario = new Usuario("fulano", "fulano@email.com", "12345678");
+        em.persist(usuario);
+        return usuario;
+    }
 }
