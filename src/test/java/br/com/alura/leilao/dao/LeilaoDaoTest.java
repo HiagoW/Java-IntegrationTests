@@ -3,6 +3,8 @@ package br.com.alura.leilao.dao;
 import br.com.alura.leilao.model.Leilao;
 import br.com.alura.leilao.model.Usuario;
 import br.com.alura.leilao.util.JPAUtil;
+import br.com.alura.leilao.util.builder.LeilaoBuilder;
+import br.com.alura.leilao.util.builder.UsuarioBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,14 +36,17 @@ class LeilaoDaoTest {
 
     @Test
     void deveriaCadastrarUmLeilao() {
-        Leilao leilao = criarLeilao();
+        Usuario usuario = criaUsuario();
+        Leilao leilao = criaLeilao(usuario);
+
         Leilao salvo = dao.buscarPorId(leilao.getId());
         assertNotNull(salvo);
     }
 
     @Test
     void deveriaAtualizarUmLeilao() {
-        Leilao leilao = criarLeilao();
+        Usuario usuario = criaUsuario();
+        Leilao leilao = criaLeilao(usuario);
 
         leilao.setNome("Celular");
         leilao.setValorInicial(new BigDecimal("400"));
@@ -53,17 +58,24 @@ class LeilaoDaoTest {
         assertEquals(new BigDecimal("400"), salvo.getValorInicial());
     }
 
-    private Leilao criarLeilao() {
-        Usuario usuario = criarUsuario();
-        Leilao leilao = new Leilao("Mochila", new BigDecimal("70"), LocalDate.now(), usuario);
-
-        leilao = dao.salvar(leilao);
-        return leilao;
-    }
-
-    private Usuario criarUsuario() {
-        Usuario usuario = new Usuario("fulano", "fulano@email.com", "12345678");
+    private Usuario criaUsuario() {
+        Usuario usuario = new UsuarioBuilder()
+                .comNome("Fulano")
+                .comEmail("fulano@email.com")
+                .comSenha("12345678")
+                .criar();
         em.persist(usuario);
         return usuario;
+    }
+
+    private Leilao criaLeilao(Usuario usuario) {
+        Leilao leilao = new LeilaoBuilder()
+                .comNome("Mochila")
+                .comValorInicial("500")
+                .comData(LocalDate.now())
+                .comUsuario(usuario)
+                .criar();
+        leilao = dao.salvar(leilao);
+        return leilao;
     }
 }
